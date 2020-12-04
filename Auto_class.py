@@ -3,7 +3,10 @@ from bs4 import BeautifulSoup as bs
 from datetime import datetime as dt
 from datetime import timedelta as td
 import os
+from pynput.keyboard import Controller,Key
 
+
+con = Controller()
 
 chrome_options_1= webdriver.ChromeOptions()
 chrome_options_1.add_argument("user-data-dir=D:\\Anuraj\\selenium profile\\Profile 1")
@@ -28,6 +31,11 @@ driver.implicitly_wait(20)
 #driver.find_element_by_xpath(path).click()
 #driver.implicitly_wait(5)
 
+
+
+
+
+
 def getlink():
     try:
         html = driver.page_source
@@ -44,8 +52,8 @@ def gettime():
     return time
 
 
-def addtime():
-    time = dt.now() + td(minutes=1)
+def addtime(i):
+    time = dt.now() + td(minutes=i)
     time = time.strftime("%H:%M")
     return time
 
@@ -95,35 +103,64 @@ def meet_close():
         return False
 
 
+def zoomClass(link):
+    meet.get(link)
 
+
+def zoomEnd():
+    if gettime() == zoomtime:
+        os.system("TASKKILL /F /IM zoom.exe")
+
+        return True
+
+    else:
+        return False
+
+'''VARIABLES'''
 checktime = gettime()
+
 if os.path.isfile('class_link.txt'):
     with open ('class_link.txt', 'r') as f:
         checklink = f.read()
         print(checklink)
+
 meet_end = 1
+
+zoomend = 1
+
+
 
 while True:
     time = gettime()
     if time == checktime:
         link = getlink()
         print(gettime()+" : "+link)
-        checktime = addtime()
-        if link != checklink and link != 'No' and meet_end == 1:
-            checklink = link
+        checktime = addtime(1)
+        if link != checklink and link != 'No':
+
+            if "meet.google.com" in link and meet_end == 1:
+                checklink = link
+                meet_end = 0
+                meetClass(link)
+
+            if "zoom.us" in link and zoomend == 1:
+                checklink = link
+                zoomend = 0
+                zoomtime = addtime(40)
+                zoomClass(link)
 
             with open("class_link.txt", "w+") as f:
                 f.write(checklink)
             f.close()
 
-            if "meet.google.com" in link:
-                meet_end = 0
-                meetClass(link)
-
         else:
             print("No link")
 
-    if meet_close():
-        meet_end = 1
+    if meet_end == 0:
+        if meet_close():
+            meet_end = 1
+    if zoomend == 0:
+        if zoomEnd():
+            zoomend = 1
 
 
